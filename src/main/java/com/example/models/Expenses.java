@@ -34,6 +34,9 @@ public class Expenses {
   private LocalDate dataRegistro;
 
   @ManyToOne
+  @JoinColumn(name = "id_gastofixo", nullable = true)
+  private FixedExpenses fixedExpenses;
+  @ManyToOne
   @JoinColumn(name = "id_categoria", nullable = false)
   private Category categoria;
     

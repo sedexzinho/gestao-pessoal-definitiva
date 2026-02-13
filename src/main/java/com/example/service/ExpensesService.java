@@ -5,14 +5,15 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 
-
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.example.Dto.ExpensesDTO;
+import com.example.Dto.FixedExpensesDTO;
 import com.example.models.Category;
 import com.example.models.Expenses;
+import com.example.models.FixedExpenses;
 import com.example.models.Parcel;
 import com.example.repository.CategoryRepository;
 import com.example.repository.ExpensesRepository;
@@ -31,9 +32,9 @@ public class ExpensesService {
     private ParcelService parcelService;
 
     public ExpensesService(
-            UserRepository userRepository, 
-            ExpensesRepository expensesRepository, 
-            CategoryRepository categoryRepository, 
+            UserRepository userRepository,
+            ExpensesRepository expensesRepository,
+            CategoryRepository categoryRepository,
             @Lazy ParcelService parcelService) { // Mantemos o @Lazy aqui para evitar dependência circular
         this.userRepository = userRepository;
         this.expensesRepository = expensesRepository;
@@ -41,20 +42,20 @@ public class ExpensesService {
         this.parcelService = parcelService;
     }
 
-   public BigDecimal consultarSaldoSimples() {
-    // 1. Se já é BigDecimal, o map apenas "deixa passar" o valor
-    BigDecimal salario = userRepository.findById(1L)
-            .map(u -> u.getSalarioMensal()) 
-            .orElse(BigDecimal.ZERO);
+    public BigDecimal consultarSaldoSimples() {
+        // 1. Se já é BigDecimal, o map apenas "deixa passar" o valor
+        BigDecimal salario = userRepository.findById(1L)
+                .map(u -> u.getSalarioMensal())
+                .orElse(BigDecimal.ZERO);
 
-    // 2. O total gasto (Stream de Expenses)
-    BigDecimal totalGasto = expensesRepository.findAll().stream()
-            .map(Expenses::getValorPago)
-            .reduce(BigDecimal.ZERO, BigDecimal::add);
+        // 2. O total gasto (Stream de Expenses)
+        BigDecimal totalGasto = expensesRepository.findAll().stream()
+                .map(Expenses::getValorPago)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-    // 3. Agora a conta fecha perfeitamente
-    return salario.subtract(totalGasto);
-}
+        // 3. Agora a conta fecha perfeitamente
+        return salario.subtract(totalGasto);
+    }
 
     @Transactional
     public void registrarGasto(ExpensesDTO dto) {
@@ -97,7 +98,7 @@ public class ExpensesService {
         } else {
             valorParaCobrar = parcel.getValor();
         }
-    Expenses newExpenses = new Expenses();
+        Expenses newExpenses = new Expenses();
         newExpenses.setNome(parcel.getNome() + "(" + parcelaAtualSendoPAga + "/" + parcel.getTotalParcelas() + ")");
         newExpenses.setValorPago(valorParaCobrar);
         newExpenses.setCategoria(parcel.getCategoria());
@@ -110,6 +111,38 @@ public class ExpensesService {
         if (parcel.getParcelasRestantes() <= 0) {
             parcel.setAtiva(false);
         }
+    }
+
+    public void registrarGastoFixo(FixedExpensesDTO dto) {
+       
+        Category category = categoryRepository.findByNomeIgnoreCase(dto.nomeCategoria()).orElseGet(() -> {
+            Category nova = new Category();
+            nova.setNome(dto.nomeCategoria());
+            return categoryRepository.save(nova);
+        });
+
+    
+        FixedExpenses fixa = new FixedExpenses();
+        fixa.setNome(dto.nome());
+        fixa.setValor(dto.valor());
+        fixa.setCategoria(category);
+        fixa.setDiaVencimento(dto.dia_vencimento());
+        
+    }
+
+    @Transactional
+    private void newFixedExpensesInExpenses(FixedExpenses fixedExpenses) {
+
+        Expenses newExpenses = new Expenses();
+
+        newExpenses.setNome(newExpenses.getNome());
+        newExpenses.setValorPago(fixedExpenses.getValor());
+        newExpenses.setCategoria(fixedExpenses.getCategoria());
+        newExpenses.setDataRegistro(LocalDate.now());
+        newExpenses.setStatus("PAGO");
+        newExpenses.setFixedExpenses(fixedExpenses);
+
+        expensesRepository.save(newExpenses);
     }
 
     public List<Expenses> findAll() {
