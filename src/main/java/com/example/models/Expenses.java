@@ -12,7 +12,7 @@ import java.time.LocalDate;
 @AllArgsConstructor
 @Entity
 @Table(name = "despesas")
-public class Despesas {
+public class Expenses {
     @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
@@ -28,13 +28,13 @@ public class Despesas {
 
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "id_parcela", nullable = true)
-  private Parcela parcela;
+  private Parcel parcela;
 
   @Column(nullable = false)
   private LocalDate dataRegistro;
 
   @ManyToOne
   @JoinColumn(name = "id_categoria", nullable = false)
-  private Categoria categoria;
+  private Category categoria;
     
 }
