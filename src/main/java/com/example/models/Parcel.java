@@ -31,16 +31,18 @@ public class Parcel {
     private BigDecimal valor;
 
     @Column(name = "dia_vencimento")
-    private int diaVencimento;
+    private Integer diaVencimento;
 
     @Column(name = "parcelas_restantes")
-    private int parcelasRestantes;
+    private Integer parcelasRestantes;
 
     @Column(name = "parcela_atual")
-    private int parcelaAtual;
+    private Integer parcelaAtual;
 
     @Column(name = "total_parcelas")
-    private int totalParcelas;
+    private Integer totalParcelas;
+    @Column(name = "valor_total")
+    private BigDecimal valorTotal;
 
     @ManyToOne
     @JoinColumn(name = "id_categoria", nullable = false)
