@@ -14,30 +14,48 @@ import java.time.LocalDate;
 @Table(name = "despesas")
 public class Expenses {
     @Id
-  @GeneratedValue(strategy = GenerationType.IDENTITY)
-  private Long id;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
-  @Column(nullable = false)
-  private String nome;
+    @Column(nullable = false)
+    private String tipo;
 
-  @Column(nullable = false)
-  private BigDecimal valorPago;
+    @Column(nullable = false)
+    private String nome;
 
-  @Column(nullable = false)
-  private String status;
+    @Column(name = "valor_pago", nullable = false)
+    private BigDecimal valorPago;
 
-  @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "id_parcela", nullable = true)
-  private Parcel parcela;
+    @Column(nullable = false)
+    private String status;
 
-  @Column(nullable = false)
-  private LocalDate dataRegistro;
+    @Column(name = "data_registro", nullable = false)
+    private LocalDate dataRegistro;
 
-  @ManyToOne
-  @JoinColumn(name = "id_gastofixo", nullable = true)
-  private FixedExpenses fixedExpenses;
-  @ManyToOne
-  @JoinColumn(name = "id_categoria", nullable = false)
-  private Category categoria;
+    @ManyToOne
+    @JoinColumn(name = "id_categoria", nullable = false)
+    private Category categoria;
+
+    @Column(name = "dia_vencimento")
+    private Integer diaVencimento;
+
+    @Column(name = "ativa")
+    private Boolean ativa = true;
+
+    @Column(name = "parcelas_restantes")
+    private Integer parcelasRestantes;
+
+    @Column(name = "parcela_atual")
+    private Integer parcelaAtual;
+
+    @Column(name = "total_parcelas")
+    private Integer totalParcelas;
+
+    @Column(name = "valor_Parcela")
+    private BigDecimal valorParcela;
+
     
+   
+    
+
 }

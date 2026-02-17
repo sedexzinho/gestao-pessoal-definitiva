@@ -8,26 +8,38 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 
 public record ExpensesDTO(
-    @NotBlank(message = "Nome não pode ser vazio") 
-    String nome,
+        @NotBlank(message = "Nome não pode ser vazio")
+         String nome,
 
-    @NotNull(message = "O valor é obrigatório")
-    @Positive(message = "O valor deve ser positivo")
-    BigDecimal valorPago,
+        @NotBlank(message = "Selecione o tipo da despesa")
+         String tipo,
 
-    @NotBlank(message = "A categoria é obrigatória")
-    String nomeCategoria,
+        @NotNull(message = "O valor é obrigatório")
+         @Positive(message = "O valor deve ser positivo")
+          BigDecimal valorPago,
 
-    @NotNull(message = "A quantidade de parcelas é obrigatória")
-    @Min(value = 1, message = "O numero de parcelas deve ser ao menos 1")
-    Integer qtdParcelas,
+        @NotBlank(message = "A categoria é obrigatória")
+         String nomeCategoria,
 
-    @NotNull(message = "O dia de vencimento é obrigatório")
-    @Range(min = 1, max = 31, message = "Dia de vencimento inválido")
-    Integer diaVencimento
-) {
-    // A lógica do isParcelado entra aqui dentro do corpo do record
+         @Min(value = 1, message = "O numero de parcelas deve ser ao menos 1") 
+         Integer totalParcelas,
+        BigDecimal valorParcela,
+        Integer parcelaAtual,
+        Integer parcelasRestantes,
+        boolean ativa,
+
+         @Range(min = 1, max = 31, message = "Dia de vencimento inválido")
+        Integer diaVencimento
+    ) 
+
+
+{
+
     public boolean isParcelado() {
-        return qtdParcelas != null && qtdParcelas > 1;
+        return totalParcelas != null && totalParcelas > 1 && "PARCELADO".equals(tipo);
     }
+     public boolean isFixo(){
+          return "FIXO".equals(tipo);
+     }
+
 }

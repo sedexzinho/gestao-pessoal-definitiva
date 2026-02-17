@@ -2,44 +2,40 @@
 package com.example.service;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.util.List;
 
-import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import com.example.Dto.ExpensesDTO;
-import com.example.Dto.FixedExpensesDTO;
 import com.example.models.Category;
 import com.example.models.Expenses;
-import com.example.models.FixedExpenses;
-import com.example.models.Parcel;
+import com.example.models.Pagamentos;
+import com.example.models.User;
 import com.example.repository.CategoryRepository;
 import com.example.repository.ExpensesRepository;
+import com.example.repository.PagamentoRepository;
 import com.example.repository.UserRepository;
 
 @Service
 public class ExpensesService {
 
     private UserRepository userRepository;
-
     private ExpensesRepository expensesRepository;
-
     private CategoryRepository categoryRepository;
-
-    @Lazy
-    private ParcelService parcelService;
+    private PagamentoRepository pagamentoRepository;
 
     public ExpensesService(
             UserRepository userRepository,
             ExpensesRepository expensesRepository,
             CategoryRepository categoryRepository,
-            @Lazy ParcelService parcelService) { // Mantemos o @Lazy aqui para evitar dependência circular
+            PagamentoRepository pagamentoRepository) {
         this.userRepository = userRepository;
         this.expensesRepository = expensesRepository;
         this.categoryRepository = categoryRepository;
-        this.parcelService = parcelService;
+        this.pagamentoRepository = pagamentoRepository;
+
     }
 
     public BigDecimal consultarSaldoSimples() {
@@ -67,82 +63,55 @@ public class ExpensesService {
             return categoryRepository.save(nova);
         });
 
-        if (dto.qtdParcelas() != null && dto.qtdParcelas() > 1) {
-            parcelService.criarNovoParcelamento(dto, category);
-        } else {
-            Expenses expenses = mapToEntity(dto, category);
-            expensesRepository.save(expenses);
-        }
+        Expenses expenses = mapToEntity(dto, category);
+        expensesRepository.save(expenses);
 
+        // Se for despesa simples (não PARCELADO e não FIXO), criar pagamento
+        // imediatamente
+        if (!"PARCELADO".equals(dto.tipo()) && !"FIXO".equals(dto.tipo())) {
+            criarPagamentoSimples(expenses);
+        }
+    }
+
+    private void criarPagamentoSimples(Expenses expenses) {
+        // Criar pagamento com status PAGO
+        Pagamentos pagamento = new Pagamentos();
+        pagamento.setDespesa(expenses);
+        pagamento.setDataPagamento(LocalDate.now());
+        pagamento.setValor(expenses.getValorPago());
+        pagamento.setStatus("PAGO");
+        pagamento.setNumeroParcela(1);
+        pagamentoRepository.save(pagamento);
+
+        // Descontar do saldo do usuário
+        descontarDoSaldo(expenses.getValorPago());
+    }
+
+    private void descontarDoSaldo(BigDecimal valor) {
+        User usuario = userRepository.findById(1L)
+                .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+        BigDecimal saldoAtual = usuario.getSalarioMensal();
+        usuario.setSalarioMensal(saldoAtual.subtract(valor));
+        userRepository.save(usuario);
     }
 
     private Expenses mapToEntity(ExpensesDTO dto, Category category) {
+        BigDecimal valorDaParcela = dto.valorPago().divide(
+                BigDecimal.valueOf(dto.totalParcelas()), 2, RoundingMode.HALF_EVEN);
         Expenses expenses = new Expenses();
         expenses.setNome(dto.nome());
         expenses.setValorPago(dto.valorPago());
         expenses.setCategoria(category);
         expenses.setDataRegistro(LocalDate.now());
         expenses.setStatus("PAGO");
+        expenses.setTipo(dto.tipo());
+        expenses.setAtiva(dto.ativa());
+        expenses.setDiaVencimento(dto.diaVencimento());
+        expenses.setValorParcela(valorDaParcela);
+        expenses.setParcelasRestantes(dto.parcelasRestantes());
+        expenses.setParcelaAtual(dto.parcelaAtual());
+        expenses.setTotalParcelas(dto.totalParcelas());
         return expenses;
-    }
-
-    @Transactional
-    public void efetivarPagamento(Parcel parcel) {
-        BigDecimal valorParaCobrar;
-        int parcelaAtualSendoPAga = parcel.getParcelaAtual() + 1;
-
-        if (parcel.getParcelasRestantes() == 1) {
-            BigDecimal valorPago = parcel.getValor().multiply(BigDecimal.valueOf(parcel.getParcelaAtual()));
-            valorParaCobrar = parcel.getValorTotal().subtract(valorPago);
-
-        } else {
-            valorParaCobrar = parcel.getValor();
-        }
-        Expenses newExpenses = new Expenses();
-        newExpenses.setNome(parcel.getNome() + "(" + parcelaAtualSendoPAga + "/" + parcel.getTotalParcelas() + ")");
-        newExpenses.setValorPago(valorParaCobrar);
-        newExpenses.setCategoria(parcel.getCategoria());
-        newExpenses.setDataRegistro(LocalDate.now());
-        newExpenses.setStatus("PAGO");
-        newExpenses.setParcela(parcel);
-        expensesRepository.save(newExpenses);
-        parcel.setParcelaAtual(parcelaAtualSendoPAga);
-        parcel.setParcelasRestantes(parcel.getParcelasRestantes() - 1);
-        if (parcel.getParcelasRestantes() <= 0) {
-            parcel.setAtiva(false);
-        }
-    }
-
-    public void registrarGastoFixo(FixedExpensesDTO dto) {
-       
-        Category category = categoryRepository.findByNomeIgnoreCase(dto.nomeCategoria()).orElseGet(() -> {
-            Category nova = new Category();
-            nova.setNome(dto.nomeCategoria());
-            return categoryRepository.save(nova);
-        });
-
-    
-        FixedExpenses fixa = new FixedExpenses();
-        fixa.setNome(dto.nome());
-        fixa.setValor(dto.valor());
-        fixa.setCategoria(category);
-        fixa.setDiaVencimento(dto.dia_vencimento());
-        
-    }
-
-    @Transactional
-    private void newFixedExpensesInExpenses(FixedExpenses fixedExpenses) {
-
-        Expenses newExpenses = new Expenses();
-
-        newExpenses.setNome(newExpenses.getNome());
-        newExpenses.setValorPago(fixedExpenses.getValor());
-        newExpenses.setCategoria(fixedExpenses.getCategoria());
-        newExpenses.setDataRegistro(LocalDate.now());
-        newExpenses.setStatus("PAGO");
-        newExpenses.setFixedExpenses(fixedExpenses);
-
-        expensesRepository.save(newExpenses);
     }
 
     public List<Expenses> findAll() {
