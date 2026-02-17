@@ -11,51 +11,44 @@ import java.time.LocalDate;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "despesas")
+@Table(name = "expenses")
 public class Expenses {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "expens_id")
     private Long id;
 
-    @Column(nullable = false)
-    private String tipo;
+    @Column(name = "expens_ds_type", nullable = false)
+    private String type;
 
-    @Column(nullable = false)
-    private String nome;
+    @Column(name = "expens_ds_name", nullable = false)
+    private String name;
 
-    @Column(name = "valor_pago", nullable = false)
-    private BigDecimal valorPago;
+    @Column(name = "expens_vl_amount", nullable = false)
+    private BigDecimal amount;
 
-    @Column(nullable = false)
+    @Column(name = "expens_st_status", nullable = false)
     private String status;
 
-    @Column(name = "data_registro", nullable = false)
-    private LocalDate dataRegistro;
+    @Column(name = "expens_dt_registered_at", nullable = false)
+    private LocalDate registeredAt;
 
     @ManyToOne
-    @JoinColumn(name = "id_categoria", nullable = false)
-    private Category categoria;
+    @JoinColumn(name = "catego_id", nullable = false)
+    private Category category;
 
-    @Column(name = "dia_vencimento")
-    private Integer diaVencimento;
+    @Column(name = "expens_nr_due_day")
+    private Integer dueDay;
 
-    @Column(name = "ativa")
-    private Boolean ativa = true;
+    @Column(name = "expens_fl_active")
+    private Boolean active = true;
 
-    @Column(name = "parcelas_restantes")
-    private Integer parcelasRestantes;
+    @Column(name = "expens_nr_current_installment")
+    private Integer currentInstallment;
 
-    @Column(name = "parcela_atual")
-    private Integer parcelaAtual;
+    @Column(name = "expens_nr_total_installments")
+    private Integer totalInstallments;
 
-    @Column(name = "total_parcelas")
-    private Integer totalParcelas;
-
-    @Column(name = "valor_Parcela")
-    private BigDecimal valorParcela;
-
-    
-   
-    
-
+    @Column(name = "expens_vl_installment_amount")
+    private BigDecimal installmentAmount;
 }

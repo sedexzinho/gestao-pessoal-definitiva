@@ -1,4 +1,3 @@
-
 package com.example.service;
 
 import java.math.BigDecimal;
@@ -11,11 +10,9 @@ import org.springframework.transaction.annotation.Transactional;
 import com.example.Dto.ExpensesDTO;
 import com.example.models.Category;
 import com.example.models.Expenses;
-import com.example.models.Pagamentos;
 import com.example.models.User;
 import com.example.repository.CategoryRepository;
 import com.example.repository.ExpensesRepository;
-import com.example.repository.PagamentoRepository;
 import com.example.repository.UserRepository;
 
 @Service
@@ -24,98 +21,71 @@ public class ExpensesService {
     private UserRepository userRepository;
     private ExpensesRepository expensesRepository;
     private CategoryRepository categoryRepository;
-    private PagamentoRepository pagamentoRepository;
 
     public ExpensesService(
             UserRepository userRepository,
             ExpensesRepository expensesRepository,
-            CategoryRepository categoryRepository,
-            PagamentoRepository pagamentoRepository) {
+            CategoryRepository categoryRepository) {
         this.userRepository = userRepository;
         this.expensesRepository = expensesRepository;
         this.categoryRepository = categoryRepository;
-        this.pagamentoRepository = pagamentoRepository;
-
     }
 
     public BigDecimal consultarSaldoSimples() {
-        // 1. Se já é BigDecimal, o map apenas "deixa passar" o valor
-        BigDecimal salario = userRepository.findById(1L)
-                .map(u -> u.getSalarioMensal())
+        BigDecimal salary = userRepository.findById(1L)
+                .map(User::getMonthlySalary)
                 .orElse(BigDecimal.ZERO);
 
-        // 2. O total gasto (Stream de Expenses)
-        BigDecimal totalGasto = expensesRepository.findAll().stream()
-                .map(Expenses::getValorPago)
+        BigDecimal totalSpent = expensesRepository.findAll().stream()
+                .map(Expenses::getAmount)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        // 3. Agora a conta fecha perfeitamente
-        return salario.subtract(totalGasto);
+        return salary.subtract(totalSpent);
     }
 
     @Transactional
     public void registrarGasto(ExpensesDTO dto) {
-
-        Category category = categoryRepository.findByNomeIgnoreCase(dto.nomeCategoria()).orElseGet(() -> {
-
+        Category category = categoryRepository.findByNameIgnoreCase(dto.nomeCategoria()).orElseGet(() -> {
             Category nova = new Category();
-            nova.setNome(dto.nomeCategoria());
+            nova.setName(dto.nomeCategoria());
             return categoryRepository.save(nova);
         });
 
         Expenses expenses = mapToEntity(dto, category);
         expensesRepository.save(expenses);
 
-        // Se for despesa simples (não PARCELADO e não FIXO), criar pagamento
-        // imediatamente
         if (!"PARCELADO".equals(dto.tipo()) && !"FIXO".equals(dto.tipo())) {
-            criarPagamentoSimples(expenses);
+            descontarDoSaldo(expenses.getAmount());
         }
     }
 
-    private void criarPagamentoSimples(Expenses expenses) {
-        // Criar pagamento com status PAGO
-        Pagamentos pagamento = new Pagamentos();
-        pagamento.setDespesa(expenses);
-        pagamento.setDataPagamento(LocalDate.now());
-        pagamento.setValor(expenses.getValorPago());
-        pagamento.setStatus("PAGO");
-        pagamento.setNumeroParcela(1);
-        pagamentoRepository.save(pagamento);
-
-        // Descontar do saldo do usuário
-        descontarDoSaldo(expenses.getValorPago());
-    }
-
-    private void descontarDoSaldo(BigDecimal valor) {
+    private void descontarDoSaldo(BigDecimal value) {
         User usuario = userRepository.findById(1L)
                 .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
-        BigDecimal saldoAtual = usuario.getSalarioMensal();
-        usuario.setSalarioMensal(saldoAtual.subtract(valor));
+        BigDecimal currentBalance = usuario.getMonthlySalary();
+        usuario.setMonthlySalary(currentBalance.subtract(value));
         userRepository.save(usuario);
     }
 
     private Expenses mapToEntity(ExpensesDTO dto, Category category) {
-        BigDecimal valorDaParcela = dto.valorPago().divide(
+        BigDecimal installmentValue = dto.valorPago().divide(
                 BigDecimal.valueOf(dto.totalParcelas()), 2, RoundingMode.HALF_EVEN);
         Expenses expenses = new Expenses();
-        expenses.setNome(dto.nome());
-        expenses.setValorPago(dto.valorPago());
-        expenses.setCategoria(category);
-        expenses.setDataRegistro(LocalDate.now());
+        expenses.setName(dto.nome());
+        expenses.setAmount(dto.valorPago());
+        expenses.setCategory(category);
+        expenses.setRegisteredAt(LocalDate.now());
         expenses.setStatus("PAGO");
-        expenses.setTipo(dto.tipo());
-        expenses.setAtiva(dto.ativa());
-        expenses.setDiaVencimento(dto.diaVencimento());
-        expenses.setValorParcela(valorDaParcela);
-        expenses.setParcelasRestantes(dto.parcelasRestantes());
-        expenses.setParcelaAtual(dto.parcelaAtual());
-        expenses.setTotalParcelas(dto.totalParcelas());
+        expenses.setType(dto.tipo());
+        expenses.setActive(dto.ativa());
+        expenses.setDueDay(dto.diaVencimento());
+        expenses.setInstallmentAmount(installmentValue);
+        expenses.setCurrentInstallment(dto.parcelaAtual());
+        expenses.setTotalInstallments(dto.totalParcelas());
         return expenses;
     }
 
     public List<Expenses> findAll() {
-        throw new UnsupportedOperationException("Unimplemented method 'findAll'");
+        return expensesRepository.findAll();
     }
-
 }

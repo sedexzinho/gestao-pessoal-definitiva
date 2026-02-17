@@ -8,6 +8,6 @@ import org.springframework.stereotype.Repository;
 import com.example.models.Expenses;
 
 @Repository
-public interface ExpensesRepository extends JpaRepository<Expenses, Long>  {
-   List<Expenses> findByDiaVencimentoAndAtivaTrue(Integer diaVencimento);
+public interface ExpensesRepository extends JpaRepository<Expenses, Long> {
+   List<Expenses> findByDueDayAndActiveTrue(Integer dueDay);
 }

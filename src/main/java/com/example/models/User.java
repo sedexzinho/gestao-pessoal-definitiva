@@ -12,18 +12,23 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "usuario")
+@Table(name = "users")
 public class User {
-     @Id
+    @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "users_id")
     private Long id;
 
-    private String nome;
+    @Column(name = "users_cd")
+    private Long code;
 
-    @Column(name = "salario_mensal")
-    private BigDecimal salarioMensal;
+    @Column(name = "users_ds_name")
+    private String name;
 
-    @Column(name = "criado_em")
-    private LocalDateTime criadoEm = LocalDateTime.now();
-    
+    @Column(name = "users_vl_monthly_salary")
+    private BigDecimal monthlySalary;
+
+    @Column(name = "users_dt_created_at")
+    private LocalDateTime createdAt = LocalDateTime.now();
+
 }

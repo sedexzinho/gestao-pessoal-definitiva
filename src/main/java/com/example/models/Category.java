@@ -9,12 +9,13 @@ import jakarta.persistence.*;
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
-@Table(name = "categoria")
+@Table(name = "categories")
 public class Category {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "catego_id")
     private Long id;
 
-    @Column(name = "nome")
-    private String nome;
+    @Column(name = "catego_ds_name")
+    private String name;
 }
