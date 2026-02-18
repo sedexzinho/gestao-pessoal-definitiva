@@ -51,4 +51,10 @@ public class Expenses {
 
     @Column(name = "expens_vl_installment_amount")
     private BigDecimal installmentAmount;
+
+    @Column(name = "expens_dt_last_payment")
+    private LocalDate lastPaymentDate;
+
+    @Column(name = "expens_fl_completed")
+    private Boolean completed = false;
 }

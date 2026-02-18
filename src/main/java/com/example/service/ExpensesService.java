@@ -75,12 +75,22 @@ public class ExpensesService {
         expenses.setAmount(dto.valorPago());
         expenses.setCategory(category);
         expenses.setRegisteredAt(LocalDate.now());
-        expenses.setStatus("PAGO");
+
+        // Para despesas parceladas e fixas, o status inicial é PENDENTE
+        // Para despesas avulsas, o status é PAGO
+        if ("PARCELADO".equals(dto.tipo()) || "FIXO".equals(dto.tipo())) {
+            expenses.setStatus("PENDENTE");
+            expenses.setCurrentInstallment(0);
+        } else {
+            expenses.setStatus("PAGO");
+            expenses.setCurrentInstallment(1);
+        }
+
         expenses.setType(dto.tipo());
-        expenses.setActive(dto.ativa());
+        // Para despesas parceladas e fixas, ativa por padrão se não especificado
+        expenses.setActive(dto.ativa() != null ? dto.ativa() : true);
         expenses.setDueDay(dto.diaVencimento());
         expenses.setInstallmentAmount(installmentValue);
-        expenses.setCurrentInstallment(dto.parcelaAtual());
         expenses.setTotalInstallments(dto.totalParcelas());
         return expenses;
     }
