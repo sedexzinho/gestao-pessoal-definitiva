@@ -1,0 +1,15 @@
+services:
+  postgres:
+    image: postgres:15
+    container_name: gestao-pessoal-db
+    environment:
+      POSTGRES_DB: minhagestao
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: "4546"
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
