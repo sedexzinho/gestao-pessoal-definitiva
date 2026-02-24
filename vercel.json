@@ -2,5 +2,11 @@
   "buildCommand": "cd gestao-pessoal && npm run build",
   "outputDirectory": "gestao-pessoal/dist",
   "installCommand": "cd gestao-pessoal && npm install",
-  "framework": "vite"
+  "framework": "vite",
+  "rewrites": [
+    {
+      "source": "/api/(.*)",
+      "destination": "https://gestao-pessoal-backend.onrender.com/api/$1"
+    }
+  ]
 }
