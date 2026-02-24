@@ -1,0 +1,6 @@
+{
+  "buildCommand": "cd gestao-pessoal && npm run build",
+  "outputDirectory": "gestao-pessoal/dist",
+  "installCommand": "cd gestao-pessoal && npm install",
+  "framework": "vite"
+}
