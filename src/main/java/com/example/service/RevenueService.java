@@ -30,9 +30,11 @@ public class RevenueService {
     }
 
     public void registrarReceitas(RevenueDTO dto) {
-        Category category = categoryRepository.findByNameIgnoreCase(dto.nomeCategoria())
-                .orElseThrow(() -> new RuntimeException(
-                        "Categoria não encontrada. Crie a categoria primeiro em Despesas ou na tela de Categorias."));
+        Category category = categoryRepository.findByNameIgnoreCase(dto.nomeCategoria()).orElseGet(() -> {
+            Category nova = new Category();
+            nova.setName(dto.nomeCategoria());
+            return categoryRepository.save(nova);
+        });
 
         Revenue revenue = mapToEntity(dto, category);
         revenueRepository.save(revenue);
@@ -46,8 +48,17 @@ public class RevenueService {
 
     public void adicionarAoSaldo(BigDecimal value) {
         User usuario = userRepository.findById(1L)
-                .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+                .orElseGet(() -> {
+                    // Criar usuário padrão se não existir
+                    User newUser = new User();
+                    newUser.setName("Usuário Padrão");
+                    newUser.setMonthlySalary(BigDecimal.ZERO);
+                    return userRepository.save(newUser);
+                });
         BigDecimal currentSalary = usuario.getMonthlySalary();
+        if (currentSalary == null) {
+            currentSalary = BigDecimal.ZERO;
+        }
         usuario.setMonthlySalary(currentSalary.add(value));
         userRepository.save(usuario);
     }

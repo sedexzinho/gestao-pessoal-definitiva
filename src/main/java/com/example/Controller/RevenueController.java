@@ -21,8 +21,6 @@ import com.example.models.Revenue;
 import com.example.repository.RevenuesRepository;
 import com.example.service.RevenueService;
 
-import jakarta.validation.Valid;
-
 @RestController
 @RequestMapping("/api/revenues")
 @CrossOrigin("*")
@@ -47,9 +45,14 @@ public class RevenueController {
   }
 
   @PostMapping
-  public ResponseEntity<String> registrarReceita(@RequestBody @Valid RevenueDTO dto) {
-    revenueService.registrarReceitas(dto);
-    return ResponseEntity.ok("Receita Registrada");
+  public ResponseEntity<String> registrarReceita(@RequestBody RevenueDTO dto) {
+    try {
+      revenueService.registrarReceitas(dto);
+      return ResponseEntity.ok("Receita Registrada");
+    } catch (Exception e) {
+      e.printStackTrace();
+      return ResponseEntity.status(500).body("Erro ao registrar receita: " + e.getMessage());
+    }
   }
 
   @PutMapping("/{id}")
@@ -82,11 +85,15 @@ public class RevenueController {
         "totalRevenues", revenueRepository.sumAllAmounts(),
         "totalFixed", revenueRepository.sumFixedAmount(),
         "totalPending", revenueRepository.sumPendingAmount(),
-        "totalMiscellaneous", revenueRepository.sumMiscellaneousAmount()
-      );
-         
-        
+        "totalMiscellaneous", revenueRepository.sumMiscellaneousAmount());
+
     return ResponseEntity.ok(summary);
+  }
+
+  @GetMapping("/month/{year}/{month}")
+  public ResponseEntity<List<Revenue>> getRevenueByMonth(@PathVariable int year, @PathVariable int month) {
+    List<Revenue> revenues = revenueRepository.findByMonth(year, month);
+    return ResponseEntity.ok(revenues);
   }
 
 }

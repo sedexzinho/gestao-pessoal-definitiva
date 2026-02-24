@@ -28,4 +28,7 @@ public interface RevenuesRepository extends JpaRepository<Revenue, Long> {
    @Query("SELECT COALESCE(SUM(r.amount), 0) FROM Revenue r WHERE r.type = 'AVULSO'")
    BigDecimal sumMiscellaneousAmount();
 
+   @Query("SELECT COALESCE (SUM(r.amount), 0 )  FROM Revenue r WHERE YEAR(r.registeredAt) = : year AND MOUNT(r.registeredAt) =: month AND r.type IN('FIXO', 'AVULSO')")
+   BigDecimal sumExpectedByMonth(int year, int month);
+
 }

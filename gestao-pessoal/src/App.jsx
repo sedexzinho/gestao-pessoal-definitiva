@@ -5,6 +5,8 @@ import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import ExpensesList from "./pages/ExpensesList";
 import ExpenseForm from "./pages/ExpenseForm";
+import RevenueList from "./pages/RevenueList";
+import RevenueForm from "./pages/RevenueForm";
 import Installments from "./pages/Installments";
 import Categories from "./pages/Categories";
 
@@ -33,6 +35,9 @@ function App() {
             <Route path="expenses" element={<ExpensesList />} />
             <Route path="expenses/new" element={<ExpenseForm />} />
             <Route path="expenses/:id/edit" element={<ExpenseForm />} />
+            <Route path="revenues" element={<RevenueList />} />
+            <Route path="revenues/new" element={<RevenueForm />} />
+            <Route path="revenues/:id/edit" element={<RevenueForm />} />
             <Route path="installments" element={<Installments />} />
             <Route path="categories" element={<Categories />} />
           </Route>

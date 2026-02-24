@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: gestao-pessoal-backend
+    env: docker
+    plan: free
+    envVars:
+      - key: DB_URL
+        sync: false
+      - key: DB_USERNAME
+        sync: false
+      - key: DB_PASSWORD
+        sync: false
