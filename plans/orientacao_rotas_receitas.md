@@ -331,7 +331,7 @@ public class RevenueController {
     @GetMapping("/month/{year}/{month}")
     public ResponseEntity<List<Revenue>> getRevenuesByMonth(@PathVariable int year, @PathVariable int month) {
         // Usa o método do service que filtra no banco de dados
-        List<Revenue> revenues = revenueService.findByMonth(year, month);
+        List<Revenue> revenues = revenueService.findByMonth(year, month);**NAO DEVERIA SER NO REPOSITORY**?
         return ResponseEntity.ok(revenues);
     }
 }
