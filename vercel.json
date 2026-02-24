@@ -6,7 +6,7 @@
   "rewrites": [
     {
       "source": "/api/(.*)",
-      "destination": "https://gestao-pessoal-backend.onrender.com/api/$1"
+      "destination": "https://gestao-pessoal-definitiva-1.onrender.com/api/$1"
     }
   ]
 }
